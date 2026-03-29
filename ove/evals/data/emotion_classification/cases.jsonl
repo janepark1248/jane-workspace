@@ -1,0 +1,5 @@
+{"id": "ec-001", "transcript": "회사에서 발표를 망쳤어요. 다들 어떻게 생각할지, 이제 저를 무능하다고 볼 것 같아서 계속 마음에 걸려요.", "expected": {"emotion_primary": "불안", "intensity_range": [5, 9]}}
+{"id": "ec-002", "transcript": "아무것도 하기 싫어요. 밥도 먹기 귀찮고, 그냥 누워 있고 싶은데 그것도 힘들어요. 뭘 해도 의미가 없는 것 같아요.", "expected": {"emotion_primary": "우울", "intensity_range": [6, 10]}}
+{"id": "ec-003", "transcript": "친구들한테 제 비밀을 털어놨는데 나중에 다른 사람한테 말한 걸 알게 됐어요. 제가 너무 바보 같아요. 어떻게 그걸 믿었을까요.", "expected": {"emotion_primary": "수치심", "intensity_range": [5, 9]}}
+{"id": "ec-004", "transcript": "팀원이 계속 약속을 어기는데 뭐라고 말을 못 하고 있어요. 속으로 너무 화가 나는데 표현을 못 하니까 더 답답해요.", "expected": {"emotion_primary": "분노", "intensity_range": [5, 8]}}
+{"id": "ec-005", "transcript": "이사 온 지 반 년이 됐는데 아직 친한 친구가 한 명도 없어요. 주말에 혼자 있을 때가 많아지면서 외로움을 많이 느껴요.", "expected": {"emotion_primary": "외로움", "intensity_range": [5, 8]}}

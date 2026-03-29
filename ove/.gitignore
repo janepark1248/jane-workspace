@@ -1,0 +1,82 @@
+# ========================
+# macOS
+# ========================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ========================
+# Xcode
+# ========================
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+build/
+xcbuild/
+Pods/
+
+# ========================
+# Swift Package Manager
+# ========================
+.build/
+.swiftpm/
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+*.pyc
+
+# ========================
+# 환경 변수 / 시크릿
+# ========================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*_secret*
+secrets.json
+config.local.*
+
+# ========================
+# Supabase
+# ========================
+supabase/.branches/
+supabase/.temp/
+
+# ========================
+# Evals 결과 (전체 커밋 제외)
+# 요약 파일만 선택적으로 커밋
+# ========================
+evals/results/*.json
+!evals/results/.gitkeep
+
+# ========================
+# 음성 샘플 (개인정보)
+# ========================
+samples/*.m4a
+samples/*.wav
+samples/*.mp3
+
+# ========================
+# IDE
+# ========================
+.idea/
+*.swp
+*.swo
+.vscode/
