@@ -80,3 +80,8 @@ samples/*.mp3
 *.swp
 *.swo
 .vscode/
+
+# ========================
+# Git Worktrees
+# ========================
+.worktrees/
