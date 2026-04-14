@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ove/ui/app_router.dart';
+import 'package:ove/ui/theme/app_theme.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: OveApp()));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class OveApp extends StatelessWidget {
+  const OveApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ove',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('ove — CBT AI'),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp.router(
+        title: 'ove',
+        theme: AppTheme.dark(),
+        routerConfig: router,
+        debugShowCheckedModeBanner: false,
+      );
 }
