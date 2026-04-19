@@ -54,12 +54,15 @@ SPIKE_CASES = [
 ]
 
 
+_FALLBACK_SYSTEM = "CBT 핵심 신념 분석가. 대화 없이 초기 전사만으로 Seed를 추론하세요. JSON으로만 응답."
+
+
 def run_test(client: OpenAI, case: dict, system_prompt: str) -> dict:
     response = client.chat.completions.create(
         model="gpt-4o",
         response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": "CBT 핵심 신념 분석가. 대화 없이 초기 전사만으로 Seed를 추론하세요. JSON으로만 응답."},
+            {"role": "system", "content": system_prompt or _FALLBACK_SYSTEM},
             {"role": "user", "content": f"초기 전사:\n{case['transcript']}\n\n대화 히스토리:\n(없음 — 초기 전사만으로 추론)"},
         ],
         temperature=0.1,
