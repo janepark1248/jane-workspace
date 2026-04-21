@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ove/data/ai/gemini_service.dart';
 import 'package:ove/data/local/session_dao.dart';
 import 'package:ove/domain/model/restatement.dart';
-import 'package:ove/domain/model/session.dart';
 import 'package:ove/ui/home/home_provider.dart';
 import 'package:ove/ui/recording/recording_provider.dart';
 
