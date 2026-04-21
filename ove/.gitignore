@@ -84,4 +84,4 @@ samples/*.mp3
 # ========================
 # Git Worktrees
 # ========================
-.worktrees/
+android-mvp/
