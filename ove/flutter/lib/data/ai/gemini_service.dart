@@ -12,7 +12,7 @@ import 'package:ove/prompts/belief_choices_prompt.dart';
 import 'package:ove/prompts/interpretation_prompt.dart';
 
 class GeminiService {
-  static const _modelName = 'gemini-1.5-flash';
+  static const _modelName = 'gemini-2.5-flash-lite';
 
   GenerativeModel _modelWithSystem(String systemPrompt) => GenerativeModel(
         model: _modelName,
