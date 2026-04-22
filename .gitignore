@@ -1,0 +1,17 @@
+# Claude Code (local settings only — project settings.json is committed)
+.claude/settings.local.json
+
+# oh-my-claudecode session/memory data
+.omc/
+
+# Playwright MCP logs
+.playwright-mcp/
+
+# macOS
+.DS_Store
+
+# Design screenshots (local artifacts)
+*.png
+*.jpg
+*.jpeg
+!ove/web/public/**

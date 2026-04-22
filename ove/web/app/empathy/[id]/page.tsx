@@ -1,0 +1,52 @@
+'use client';
+
+import { use, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEmpathyStore } from '@/stores/empathy-store';
+
+export default function EmpathyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const router = useRouter();
+  const { empathyText, isLoading, error, load } = useEmpathyStore();
+
+  useEffect(() => {
+    load(id);
+  }, [id, load]);
+
+  if (isLoading && !empathyText) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p className="text-ove-muted text-sm animate-pulse">공감 응답 생성 중...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center px-6 gap-4">
+        <p className="text-red-400 text-sm">{error}</p>
+        <button onClick={() => load(id)} className="text-ove-muted text-sm underline">
+          다시 시도
+        </button>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen flex flex-col px-6 py-12">
+      <div className="flex-1 flex flex-col justify-center">
+        <p className="text-ove-muted text-xs uppercase tracking-widest mb-4">AI 응답</p>
+        <div className="bg-ove-surface rounded-xl p-6 border border-ove-border">
+          <p className="text-ove-primary text-base leading-relaxed">{empathyText}</p>
+        </div>
+      </div>
+
+      <button
+        onClick={() => router.push(`/belief-hypothesis/${id}`)}
+        className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
+      >
+        계속하기 →
+      </button>
+    </main>
+  );
+}
