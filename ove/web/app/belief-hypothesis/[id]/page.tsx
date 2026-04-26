@@ -3,11 +3,12 @@
 import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBeliefHypothesisStore } from '@/stores/belief-hypothesis-store';
+import { WaveLoading } from '@/app/components/WaveLoading';
 
 export default function BeliefHypothesisPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { hypothesisText, hypothesisBelief, isLoading, error, load, confirmHypothesis } =
+  const { hypotheses, selectedIndex, isLoading, error, load, selectHypothesis, confirmHypothesis } =
     useBeliefHypothesisStore();
 
   useEffect(() => {
@@ -23,10 +24,10 @@ export default function BeliefHypothesisPage({ params }: { params: Promise<{ id:
     router.push(`/belief/${id}`);
   };
 
-  if (isLoading && !hypothesisText) {
+  if (isLoading && hypotheses.length === 0) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <p className="text-ove-muted text-sm animate-pulse">신념 가설 생성 중...</p>
+        <WaveLoading message="깊이 들여다보고 있어요" />
       </main>
     );
   }
@@ -42,27 +43,42 @@ export default function BeliefHypothesisPage({ params }: { params: Promise<{ id:
     );
   }
 
+  const selected = selectedIndex !== null ? hypotheses[selectedIndex] : null;
+
   return (
     <main className="min-h-screen flex flex-col px-6 py-12">
       <h2 className="text-xl font-light text-ove-primary mb-2">하나 여쭤봐도 될까요?</h2>
-      <p className="text-ove-muted text-sm mb-8">대화를 들으면서 든 생각이에요.</p>
+      <p className="text-ove-muted text-sm mb-8">대화를 들으면서 든 생각이에요. 가장 와닿는 걸 골라주세요.</p>
 
-      <div className="flex-1 flex flex-col justify-center">
-        <div className="bg-ove-surface rounded-xl p-6 border border-ove-border mb-4">
-          <p className="text-ove-primary text-sm leading-relaxed">{hypothesisText}</p>
-        </div>
-        {hypothesisBelief && (
-          <p className="text-ove-muted text-xs text-center">"{hypothesisBelief}"</p>
-        )}
+      <div className="flex-1 flex flex-col justify-center gap-3">
+        {hypotheses.map((h, i) => {
+          const isSelected = selectedIndex === i;
+          return (
+            <button
+              key={h.belief}
+              onClick={() => selectHypothesis(i)}
+              className={`w-full text-left rounded-xl p-5 border transition-all ${
+                isSelected
+                  ? 'bg-ove-primary text-black border-ove-primary'
+                  : 'bg-ove-surface text-ove-primary border-ove-border hover:border-ove-muted'
+              }`}
+            >
+              <p className="text-sm leading-relaxed">{h.text}</p>
+              <p className={`text-xs mt-2 ${isSelected ? 'text-black/60' : 'text-ove-muted'}`}>
+                "{h.belief}"
+              </p>
+            </button>
+          );
+        })}
       </div>
 
       <div className="space-y-3 mt-8">
         <button
           onClick={handleConfirm}
-          disabled={isLoading}
+          disabled={selectedIndex === null || isLoading}
           className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm disabled:opacity-30 hover:opacity-90 transition-opacity"
         >
-          {isLoading ? '처리 중...' : '맞아요, 그런 것 같아요'}
+          {isLoading ? '잠시만요...' : selected ? `"${selected.belief}" 이게 맞는 것 같아요` : '선택해주세요'}
         </button>
         <button
           onClick={handleDeny}

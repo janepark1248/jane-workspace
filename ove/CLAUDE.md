@@ -110,6 +110,138 @@ python scripts/spike/seed_prompt_test.py
 
 ---
 
+## 웹 앱 구조 자동 동기화 규칙
+
+`web/` 디렉토리 안에 파일이나 디렉토리를 **추가·삭제·이동**한 경우,
+같은 세션 안에서 반드시 아래 작업을 수행한다:
+
+1. `## 웹 앱 구조 (web/)` → `### 파일 트리` 섹션을 현재 구조에 맞게 업데이트
+2. 새 컴포넌트를 `app/components/`에 추가한 경우 → `### 컴포넌트 목록` 테이블에 행 추가
+3. 새 레이어(예: 새 `lib/` 하위 디렉토리)가 생긴 경우 → `### 레이어 아키텍처` 검토 후 필요 시 수정
+
+**트리거 조건:**
+- `Write` 도구로 `web/` 아래 새 파일 생성
+- `Bash`로 파일·디렉토리 이동·삭제 (`mv`, `rm`, `mkdir`)
+- 기존 파일 수정(`Edit`)은 트리거하지 않음 — 구조 변경이 없으므로
+
+**업데이트 범위:**
+- 파일 트리: 전체 재작성 (현재 디렉토리 구조 기준)
+- 컴포넌트 목록: 추가된 항목만 테이블에 삽입
+- 레이어 아키텍처·데이터 플로우: 새 레이어가 추가된 경우에만 수정
+
+---
+
+## 웹 앱 구조 (web/)
+
+### 파일 트리
+
+```
+web/
+├── app/                               # Next.js App Router 루트
+│   ├── layout.tsx                     # 전역 레이아웃 (폰트, 메타데이터)
+│   ├── page.tsx                       # 홈 — 최근 세션 목록 + 새 입력창
+│   ├── api/
+│   │   └── gemini/
+│   │       └── route.ts               # Gemini API 단일 엔드포인트 (서버 사이드)
+│   ├── components/
+│   │   ├── WaveLoading.tsx            # 공유 로딩 애니메이션 컴포넌트
+│   │   └── TypingIndicator.tsx        # deep 채팅 ove 생각 중 세 점 bounce 인디케이터
+│   ├── restatement/[id]/
+│   │   ├── page.tsx                   # 재진술 확인 화면
+│   │   └── followup/
+│   │       └── page.tsx               # 팔로우업 & Socratic 질문 화면
+│   ├── empathy/[id]/
+│   │   └── page.tsx                   # 공감 응답 화면
+│   ├── belief-hypothesis/[id]/
+│   │   └── page.tsx                   # 핵심 신념 가설 화면
+│   ├── belief/[id]/
+│   │   └── page.tsx                   # 신념 선택/커스텀 입력 화면
+│   ├── report/[id]/
+│   │   └── page.tsx                   # 최종 리포트 화면
+│   └── deep/[id]/
+│       └── page.tsx                   # 딥챗 화면 (소크라테틱 3라운드 + 요약)
+├── lib/
+│   ├── ai/
+│   │   └── gemini.ts                  # Gemini SDK 래퍼 (서버 전용)
+│   ├── db/
+│   │   └── session-db.ts              # Dexie(IndexedDB) 인스턴스 & 쿼리
+│   ├── models/                        # TypeScript 타입 정의
+│   │   ├── session.ts                 # LocalSession (최상위 세션 타입)
+│   │   ├── restatement.ts             # Restatement (상황/생각/감정)
+│   │   ├── belief-selection.ts        # BeliefSelection
+│   │   ├── action-item.ts             # ActionItem
+│   │   └── homework.ts                # Homework (CBT 과제)
+│   ├── prompts/                       # AI 프롬프트 (코드 인라인 금지)
+│   │   ├── restatement-prompt.ts
+│   │   ├── followup-prompt.ts
+│   │   ├── empathy-prompt.ts
+│   │   ├── belief-hypothesis-prompt.ts
+│   │   ├── belief-choices-prompt.ts
+│   │   ├── interpretation-prompt.ts
+│   │   └── deep-prompt.ts             # 딥챗 소크라테틱 프롬프트
+│   └── session-state.ts               # 세션 상태 유틸리티
+└── stores/                            # Zustand 전역 상태
+    ├── restatement-store.ts           # 재진술 단계 상태
+    ├── empathy-store.ts               # 공감 단계 상태
+    ├── belief-hypothesis-store.ts     # 신념 가설 단계 상태
+    ├── belief-store.ts                # 신념 선택 단계 상태
+    ├── report-store.ts                # 리포트 단계 상태
+    ├── deep-chat-store.ts             # 딥챗 단계 상태 (소크라테틱 3라운드)
+    └── chat-store.ts                  # (레거시) 채팅 상태
+```
+
+### 레이어 아키텍처
+
+```
+┌──────────────────────────────────────────┐
+│         Pages  (app/**/*.tsx)            │  UI 렌더링, 사용자 인터랙션
+│  page.tsx → 스토어 구독 + 이벤트 발행   │
+└────────────────┬─────────────────────────┘
+                 │ 읽기/쓰기
+┌────────────────▼─────────────────────────┐
+│         Stores  (stores/*.ts)            │  전역 상태 (Zustand)
+│  비동기 액션 → /api/gemini 호출         │
+└──────────┬───────────────┬───────────────┘
+           │ API 호출      │ DB 저장
+┌──────────▼──────┐  ┌────▼──────────────┐
+│ /api/gemini     │  │  session-db.ts    │  서버 엔드포인트 / 로컬 DB
+│ (route.ts       │  │  (Dexie/IndexedDB)│
+│  → gemini.ts)   │  └───────────────────┘
+└─────────────────┘
+
+의존성 방향: Pages → Stores → (API | DB)
+역방향 참조 금지 (DB가 Store를 import하는 등)
+```
+
+### 컴포넌트 목록
+
+| 컴포넌트 | 경로 | 역할 |
+|----------|------|------|
+| `WaveLoading` | `app/components/WaveLoading.tsx` | AI 응답 대기 중 파동 로딩 애니메이션 |
+| `TypingIndicator` | `app/components/TypingIndicator.tsx` | deep 채팅 ove 생각 중 세 점 bounce 인디케이터 |
+
+> 공유 컴포넌트는 `app/components/`에만 추가한다. 페이지 전용 UI는 각 `page.tsx` 안에 인라인으로 작성한다.
+
+### 데이터 플로우
+
+```
+사용자 입력 (홈 page.tsx)
+  → restatement-store.ts: callRestatement()
+  → POST /api/gemini  (route.ts → gemini.ts → Gemini API)
+  → 응답 파싱 → session-db.ts: saveSession()
+  → /restatement/[id] 이동
+
+각 단계마다:
+  스토어 액션 → /api/gemini 호출 → DB 저장 → 다음 라우트로 이동
+  세션 ID([id])가 전체 플로우를 연결하는 공유 키
+
+데이터 경계:
+  - 서버 전송 없음 — 모든 세션 데이터는 IndexedDB에만 보관
+  - Gemini API 요청에는 프롬프트 + 사용자 텍스트만 포함 (개인 식별 정보 없음)
+```
+
+---
+
 ## 금지 사항
 
 - `GEMINI_API_KEY` 코드 하드코딩 ❌

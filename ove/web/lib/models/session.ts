@@ -5,6 +5,12 @@ import type { Homework } from './homework';
 
 export type SessionStatus = 'inProgress' | 'completed' | 'interrupted';
 
+export interface DeepChatQA {
+  question: string;
+  answer: string;
+  round: number;
+}
+
 export interface FollowUpQA {
   targetElement?: 'situation' | 'thought' | 'emotion';
   question: string;
@@ -23,7 +29,10 @@ export interface LocalSession {
   followUpQA: FollowUpQA[];
   empathyResponse?: string;
   beliefHypothesis?: { text: string; belief: string };
+  beliefHypotheses?: Array<{ text: string; belief: string }>;
   beliefSelection?: BeliefSelection;
   actionItems: ActionItem[];
   homework?: Homework;
+  deepChat?: DeepChatQA[];
+  deepChatSummary?: string;
 }

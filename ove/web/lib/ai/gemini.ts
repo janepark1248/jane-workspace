@@ -40,15 +40,14 @@ export async function generateSocraticQuestion(params: {
   restatement: Restatement;
   followUpAnswers: string[];
   round: 1 | 2;
-}): Promise<string> {
-  const data = await callGemini<{ question: string }>('socraticFollowup', {
+}): Promise<{ question: string; choices?: string[] }> {
+  return callGemini<{ question: string; choices?: string[] }>('socraticFollowup', {
     situation: params.restatement.situation,
     thought: params.restatement.thought,
     emotion: params.restatement.emotion,
     followUpAnswers: params.followUpAnswers,
     round: params.round,
   });
-  return data.question;
 }
 
 export async function generateEmpathy(params: {
@@ -67,13 +66,16 @@ export async function generateEmpathy(params: {
 export async function generateBeliefHypothesis(params: {
   restatement: Restatement;
   followUpAnswers: string[];
-}): Promise<{ hypothesis: string; belief: string }> {
-  return callGemini<{ hypothesis: string; belief: string }>('beliefHypothesis', {
-    situation: params.restatement.situation,
-    thought: params.restatement.thought,
-    emotion: params.restatement.emotion,
-    followUpAnswers: params.followUpAnswers,
-  });
+}): Promise<{ hypotheses: Array<{ hypothesis: string; belief: string }> }> {
+  return callGemini<{ hypotheses: Array<{ hypothesis: string; belief: string }> }>(
+    'beliefHypothesis',
+    {
+      situation: params.restatement.situation,
+      thought: params.restatement.thought,
+      emotion: params.restatement.emotion,
+      followUpAnswers: params.followUpAnswers,
+    },
+  );
 }
 
 export async function generateBeliefChoices(params: {

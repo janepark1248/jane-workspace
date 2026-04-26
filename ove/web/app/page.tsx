@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAllSessions } from '@/lib/db/session-db';
+import { getAllSessions, deleteSession } from '@/lib/db/session-db';
 import { useChatStore } from '@/stores/chat-store';
 import type { LocalSession } from '@/lib/models/session';
 
@@ -14,6 +14,7 @@ export default function HomePage() {
   const [sessions, setSessions] = useState<LocalSession[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [text, setText] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const { isSubmitting, error, submit } = useChatStore();
 
   useEffect(() => {
@@ -31,31 +32,51 @@ export default function HomePage() {
     setText('');
   };
 
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    await deleteSession(confirmDeleteId);
+    setSessions((prev) => prev.filter((s) => s.id !== confirmDeleteId));
+    setConfirmDeleteId(null);
+  };
+
   return (
     <main className="min-h-screen flex flex-col px-6 py-12">
       <div className="flex-1">
         <h1 className="text-5xl font-light text-ove-primary tracking-tight text-center">ove</h1>
-        <p className="text-ove-muted text-sm mt-2 mb-12 text-center">나의 감정을 이야기하세요</p>
+        <p className="text-ove-muted text-sm mt-2 mb-12 text-center">지금 느끼는 것을 담아두세요</p>
 
         {sessions.length > 0 && (
           <div className="space-y-3">
-            <p className="text-ove-muted text-xs uppercase tracking-widest mb-4">최근 세션</p>
+            <p className="text-ove-muted text-xs tracking-widest mb-4">지난 이야기</p>
             {sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => router.push(`/report/${session.id}`)}
-                className="w-full bg-ove-surface rounded-xl p-4 text-left border border-ove-border hover:border-ove-muted transition-colors"
-              >
-                <p className="text-ove-primary text-sm truncate">{session.transcript}</p>
-                <p className="text-ove-muted text-xs mt-1">
-                  {new Date(session.startedAt).toLocaleDateString('ko-KR', {
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              </button>
+              <div key={session.id} className="relative group">
+                <button
+                  onClick={() => router.push(`/report/${session.id}`)}
+                  className="w-full bg-ove-surface rounded-xl p-4 text-left border border-ove-border hover:border-ove-muted transition-colors"
+                >
+                  <p className="text-ove-primary text-sm truncate pr-6">{session.transcript}</p>
+                  <p className="text-ove-muted text-xs mt-1">
+                    {new Date(session.startedAt).toLocaleDateString('ko-KR', {
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(session.id); }}
+                  className="absolute top-3 right-3 text-ove-muted hover:text-ove-primary transition-colors p-1"
+                  aria-label="세션 삭제"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                  </svg>
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -67,6 +88,32 @@ export default function HomePage() {
       >
         지금 이야기하기
       </button>
+
+      {confirmDeleteId && (
+        <>
+          <div className="fixed inset-0 bg-black/60 z-40" onClick={() => setConfirmDeleteId(null)} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 px-6">
+            <div className="bg-ove-surface rounded-2xl p-6 w-full max-w-[320px] border border-ove-border">
+              <p className="text-ove-primary text-sm font-medium mb-2">세션 삭제</p>
+              <p className="text-ove-muted text-xs mb-6">이 세션을 삭제할까요? 되돌릴 수 없습니다.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="flex-1 py-2.5 rounded-xl text-sm text-ove-muted border border-ove-border hover:border-ove-muted transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 py-2.5 rounded-xl text-sm bg-red-900/40 text-red-400 border border-red-900/60 hover:bg-red-900/60 transition-colors"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {isOpen && (
         <>
@@ -83,7 +130,7 @@ export default function HomePage() {
                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit();
               }}
               maxLength={MAX_LENGTH}
-              placeholder="오늘 있었던 일을 말해주세요..."
+              placeholder="지금 무슨 일이 있었나요..."
               autoFocus
               className="w-full min-h-[140px] bg-ove-bg text-ove-primary rounded-xl p-4 resize-none text-sm leading-relaxed placeholder:text-ove-muted border border-ove-border focus:outline-none focus:border-ove-muted transition-colors"
             />
@@ -96,7 +143,7 @@ export default function HomePage() {
                   disabled={text.trim().length < MIN_LENGTH || isSubmitting}
                   className="bg-ove-primary text-black px-6 py-2.5 rounded-xl font-medium text-sm disabled:opacity-30 hover:opacity-90 transition-opacity"
                 >
-                  {isSubmitting ? '분석 중...' : '시작하기'}
+                  {isSubmitting ? '잠시만요...' : '시작하기'}
                 </button>
               </div>
             </div>
