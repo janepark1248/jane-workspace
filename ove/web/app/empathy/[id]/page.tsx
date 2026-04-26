@@ -3,6 +3,7 @@
 import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEmpathyStore } from '@/stores/empathy-store';
+import { WaveLoading } from '@/app/components/WaveLoading';
 
 export default function EmpathyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -16,7 +17,7 @@ export default function EmpathyPage({ params }: { params: Promise<{ id: string }
   if (isLoading && !empathyText) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <p className="text-ove-muted text-sm animate-pulse">공감 응답 생성 중...</p>
+        <WaveLoading message="마음을 느끼고 있어요" />
       </main>
     );
   }
@@ -35,7 +36,6 @@ export default function EmpathyPage({ params }: { params: Promise<{ id: string }
   return (
     <main className="min-h-screen flex flex-col px-6 py-12">
       <div className="flex-1 flex flex-col justify-center">
-        <p className="text-ove-muted text-xs uppercase tracking-widest mb-4">AI 응답</p>
         <div className="bg-ove-surface rounded-xl p-6 border border-ove-border">
           <p className="text-ove-primary text-base leading-relaxed">{empathyText}</p>
         </div>
@@ -45,7 +45,7 @@ export default function EmpathyPage({ params }: { params: Promise<{ id: string }
         onClick={() => router.push(`/belief-hypothesis/${id}`)}
         className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
       >
-        계속하기 →
+        계속하기
       </button>
     </main>
   );

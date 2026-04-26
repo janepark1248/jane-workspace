@@ -5,19 +5,20 @@ import type { LocalSession } from '@/lib/models/session';
 
 interface BeliefHypothesisState {
   session: LocalSession | null;
-  hypothesisText: string;
-  hypothesisBelief: string;
+  hypotheses: Array<{ text: string; belief: string }>;
+  selectedIndex: number | null;
   isLoading: boolean;
   error: string | null;
   load: (sessionId: string) => Promise<void>;
+  selectHypothesis: (index: number) => void;
   confirmHypothesis: (sessionId: string) => Promise<void>;
   reset: () => void;
 }
 
 export const useBeliefHypothesisStore = create<BeliefHypothesisState>((set, get) => ({
   session: null,
-  hypothesisText: '',
-  hypothesisBelief: '',
+  hypotheses: [],
+  selectedIndex: null,
   isLoading: false,
   error: null,
 
@@ -27,41 +28,54 @@ export const useBeliefHypothesisStore = create<BeliefHypothesisState>((set, get)
       const session = await getSession(sessionId);
       if (!session) throw new Error('세션을 찾을 수 없습니다.');
 
+      // 이미 저장된 복수 가설이 있으면 복원
+      if (session.beliefHypotheses && session.beliefHypotheses.length > 0) {
+        set({ session, hypotheses: session.beliefHypotheses, selectedIndex: 0, isLoading: false });
+        return;
+      }
+      // 레거시: 단일 가설이 저장된 경우
       if (session.beliefHypothesis) {
-        set({
-          session,
-          hypothesisText: session.beliefHypothesis.text,
-          hypothesisBelief: session.beliefHypothesis.belief,
-          isLoading: false,
-        });
+        const hypotheses = [{ text: session.beliefHypothesis.text, belief: session.beliefHypothesis.belief }];
+        set({ session, hypotheses, selectedIndex: 0, isLoading: false });
         return;
       }
 
       const followUpAnswers = session.followUpQA.map((qa) => qa.answerText);
-      const { hypothesis, belief } = await generateBeliefHypothesis({
+      const { hypotheses: raw } = await generateBeliefHypothesis({
         restatement: session.restatement!,
         followUpAnswers,
       });
+      const hypotheses = raw.map((h) => ({ text: h.hypothesis, belief: h.belief }));
       const updated: LocalSession = {
         ...session,
-        beliefHypothesis: { text: hypothesis, belief },
+        beliefHypotheses: hypotheses,
+        beliefHypothesis: hypotheses[0]
+          ? { text: hypotheses[0].text, belief: hypotheses[0].belief }
+          : session.beliefHypothesis,
       };
       await updateSession(updated);
-      set({ session: updated, hypothesisText: hypothesis, hypothesisBelief: belief, isLoading: false });
+      set({ session: updated, hypotheses, selectedIndex: 0, isLoading: false });
     } catch {
       set({ isLoading: false, error: '신념 가설 생성 중 오류가 발생했습니다.' });
     }
   },
 
+  selectHypothesis: (index: number) => {
+    set({ selectedIndex: index });
+  },
+
   confirmHypothesis: async (sessionId: string) => {
-    const { session, hypothesisBelief } = get();
-    if (!session || !hypothesisBelief) return;
+    const { session, hypotheses, selectedIndex } = get();
+    if (!session || selectedIndex === null) return;
+
+    const selected = hypotheses[selectedIndex];
+    if (!selected) return;
 
     const updated: LocalSession = {
       ...session,
       beliefSelection: {
-        choices: session.beliefSelection?.choices ?? [hypothesisBelief],
-        selectedChoice: hypothesisBelief,
+        choices: session.beliefSelection?.choices ?? [selected.belief],
+        selectedChoice: selected.belief,
         isCustomInput: false,
         interpretation: '',
       },
@@ -71,5 +85,5 @@ export const useBeliefHypothesisStore = create<BeliefHypothesisState>((set, get)
   },
 
   reset: () =>
-    set({ session: null, hypothesisText: '', hypothesisBelief: '', isLoading: false, error: null }),
+    set({ session: null, hypotheses: [], selectedIndex: null, isLoading: false, error: null }),
 }));

@@ -79,14 +79,14 @@ export default function RestatementPage({ params }: { params: Promise<{ id: stri
               onClick={() => setShowCorrection(true)}
               className="flex-1 py-3.5 rounded-xl border border-ove-border text-ove-muted text-sm font-medium hover:border-ove-muted transition-colors"
             >
-              아니야
+              아니에요
             </button>
             <button
               onClick={() => confirmParaphrase(id)}
               disabled={isLoading}
               className="flex-1 py-3.5 rounded-xl bg-ove-primary text-black text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-30"
             >
-              맞아
+              맞아요
             </button>
           </div>
         ) : (

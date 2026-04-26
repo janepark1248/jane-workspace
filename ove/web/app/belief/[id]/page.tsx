@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBeliefStore } from '@/stores/belief-store';
+import { WaveLoading } from '@/app/components/WaveLoading';
 
 export default function BeliefPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -40,7 +41,7 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
   if (isLoading && choices.length === 0) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <p className="text-ove-muted text-sm animate-pulse">신념 선택지 생성 중...</p>
+        <WaveLoading message="깊이 들여다보고 있어요" />
       </main>
     );
   }
@@ -58,9 +59,9 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <main className="min-h-screen flex flex-col px-6 py-12">
-      <h2 className="text-xl font-light text-ove-primary mb-2">핵심 신념을 선택해주세요</h2>
+      <h2 className="text-xl font-light text-ove-primary mb-2">가장 가까운 믿음을 골라보세요</h2>
       <p className="text-ove-muted text-sm mb-8">
-        이 대화에서 드러난 나의 믿음이에요. 가장 맞는 것을 선택해주세요.
+        이 대화에서 드러난 나의 믿음이에요.
       </p>
 
       <div className="space-y-3 mb-4">
@@ -87,7 +88,7 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
             : 'border-ove-border text-ove-muted hover:border-ove-muted bg-transparent'
         }`}
       >
-        ✏️ 직접 입력하기
+        직접 적기
       </button>
 
       {isCustomInput && (
@@ -107,7 +108,7 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
           disabled={!canConfirm || isLoading}
           className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm disabled:opacity-30 hover:opacity-90 transition-opacity"
         >
-          {isLoading ? '처리 중...' : '이게 맞아요 →'}
+          {isLoading ? '잠시만요...' : '이걸로 할게요'}
         </button>
       </div>
     </main>

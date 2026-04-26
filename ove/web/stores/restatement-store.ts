@@ -13,6 +13,7 @@ interface RestatementState {
   session: LocalSession | null;
   isLoading: boolean;
   followUpQuestion: string | null;
+  socraticChoices: string[] | null;
   currentPhase: 'ste' | 'socratic';
   awaitingConfirmation: boolean;
   readyForFollowUp: boolean;
@@ -33,6 +34,7 @@ export const useRestatementStore = create<RestatementState>((set, get) => ({
   session: null,
   isLoading: false,
   followUpQuestion: null,
+  socraticChoices: null,
   currentPhase: 'ste',
   awaitingConfirmation: false,
   readyForFollowUp: false,
@@ -148,6 +150,7 @@ export const useRestatementStore = create<RestatementState>((set, get) => ({
       session: null,
       isLoading: false,
       followUpQuestion: null,
+      socraticChoices: null,
       currentPhase: 'ste',
       awaitingConfirmation: false,
       readyForFollowUp: false,
@@ -170,7 +173,7 @@ async function resolveFollowUp(
       transcript: session.transcript,
       restatement,
     });
-    set({ session, isLoading: false, followUpQuestion, currentPhase: 'ste', readyForEmpathy: false });
+    set({ session, isLoading: false, followUpQuestion, socraticChoices: null, currentPhase: 'ste', readyForEmpathy: false });
     return;
   }
 
@@ -178,7 +181,7 @@ async function resolveFollowUp(
   if (socraticQAs.length < SOCRATIC_ROUNDS) {
     const round = (socraticQAs.length + 1) as 1 | 2;
     const followUpAnswers = session.followUpQA.map((qa) => qa.answerText);
-    const followUpQuestion = await generateSocraticQuestion({
+    const { question: followUpQuestion, choices } = await generateSocraticQuestion({
       restatement,
       followUpAnswers,
       round,
@@ -187,11 +190,12 @@ async function resolveFollowUp(
       session,
       isLoading: false,
       followUpQuestion,
+      socraticChoices: choices && choices.length > 0 ? choices : null,
       currentPhase: 'socratic',
       readyForEmpathy: false,
     });
     return;
   }
 
-  set({ session, isLoading: false, followUpQuestion: null, currentPhase: 'ste', readyForEmpathy: true });
+  set({ session, isLoading: false, followUpQuestion: null, socraticChoices: null, currentPhase: 'ste', readyForEmpathy: true });
 }
