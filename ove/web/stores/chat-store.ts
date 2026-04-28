@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { insertSession } from '@/lib/db/session-db';
+import { saveSession } from '@/lib/db/session-db';
 import type { LocalSession } from '@/lib/models/session';
 
 interface ChatState {
@@ -25,12 +25,12 @@ export const useChatStore = create<ChatState>((set) => ({
         followUpQA: [],
         actionItems: [],
       };
-      await insertSession(session);
+      await saveSession(session);
       set({ isSubmitting: false });
       return session.id;
     } catch {
-      set({ isSubmitting: false, error: '저장에 실패했습니다.' });
-      throw new Error('저장에 실패했습니다.');
+      set({ isSubmitting: false, error: '저장하다 멈췄어요.' });
+      throw new Error('저장하다 멈췄어요.');
     }
   },
 

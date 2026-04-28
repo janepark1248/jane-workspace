@@ -5,6 +5,18 @@ import type { Homework } from './homework';
 
 export type SessionStatus = 'inProgress' | 'completed' | 'interrupted';
 
+export type SessionStep =
+  | 'idle'
+  | 'inputting'
+  | 'restating'
+  | 'followUp'
+  | 'empathy'
+  | 'beliefHypothesis'
+  | 'beliefSelection'
+  | 'generating'
+  | 'report'
+  | 'complete';
+
 export interface DeepChatQA {
   question: string;
   answer: string;
@@ -28,7 +40,6 @@ export interface LocalSession {
   restatement?: Restatement;
   followUpQA: FollowUpQA[];
   empathyResponse?: string;
-  beliefHypothesis?: { text: string; belief: string };
   beliefHypotheses?: Array<{ text: string; belief: string }>;
   beliefSelection?: BeliefSelection;
   actionItems: ActionItem[];

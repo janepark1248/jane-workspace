@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getSession, updateSession } from '@/lib/db/session-db';
+import { saveSession, withSessionLoad } from '@/lib/db/session-db';
 import { generateBeliefHypothesis } from '@/lib/ai/gemini';
 import type { LocalSession } from '@/lib/models/session';
 
@@ -23,41 +23,21 @@ export const useBeliefHypothesisStore = create<BeliefHypothesisState>((set, get)
   error: null,
 
   load: async (sessionId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const session = await getSession(sessionId);
-      if (!session) throw new Error('세션을 찾을 수 없습니다.');
-
-      // 이미 저장된 복수 가설이 있으면 복원
+    await withSessionLoad<BeliefHypothesisState>(sessionId, set, async (session, set) => {
       if (session.beliefHypotheses && session.beliefHypotheses.length > 0) {
         set({ session, hypotheses: session.beliefHypotheses, selectedIndex: 0, isLoading: false });
         return;
       }
-      // 레거시: 단일 가설이 저장된 경우
-      if (session.beliefHypothesis) {
-        const hypotheses = [{ text: session.beliefHypothesis.text, belief: session.beliefHypothesis.belief }];
-        set({ session, hypotheses, selectedIndex: 0, isLoading: false });
-        return;
-      }
-
       const followUpAnswers = session.followUpQA.map((qa) => qa.answerText);
       const { hypotheses: raw } = await generateBeliefHypothesis({
         restatement: session.restatement!,
         followUpAnswers,
       });
       const hypotheses = raw.map((h) => ({ text: h.hypothesis, belief: h.belief }));
-      const updated: LocalSession = {
-        ...session,
-        beliefHypotheses: hypotheses,
-        beliefHypothesis: hypotheses[0]
-          ? { text: hypotheses[0].text, belief: hypotheses[0].belief }
-          : session.beliefHypothesis,
-      };
-      await updateSession(updated);
+      const updated: LocalSession = { ...session, beliefHypotheses: hypotheses };
+      await saveSession(updated);
       set({ session: updated, hypotheses, selectedIndex: 0, isLoading: false });
-    } catch {
-      set({ isLoading: false, error: '신념 가설 생성 중 오류가 발생했습니다.' });
-    }
+    }, '신념을 탐색하다 멈췄어요.');
   },
 
   selectHypothesis: (index: number) => {
@@ -75,12 +55,12 @@ export const useBeliefHypothesisStore = create<BeliefHypothesisState>((set, get)
       ...session,
       beliefSelection: {
         choices: session.beliefSelection?.choices ?? [selected.belief],
-        selectedChoice: selected.belief,
+        selectedChoices: [selected.belief],
         isCustomInput: false,
         interpretation: '',
       },
     };
-    await updateSession(updated);
+    await saveSession(updated);
     set({ session: updated });
   },
 

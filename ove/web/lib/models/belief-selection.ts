@@ -1,6 +1,6 @@
 export interface BeliefSelection {
   choices: string[];
-  selectedChoice: string;
+  selectedChoices: string[];
   isCustomInput: boolean;
   interpretation: string;
 }

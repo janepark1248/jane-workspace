@@ -47,7 +47,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
     );
   }
 
-  const belief = session?.beliefSelection?.selectedChoice;
+  const beliefs = session?.beliefSelection?.selectedChoices ?? [];
 
   return (
     <main className="min-h-screen flex flex-col px-6 py-12">
@@ -62,11 +62,13 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
         </div>
       )}
 
-      {belief && (
+      {beliefs.length > 0 && (
         <div className="mb-6">
           <p className="text-ove-muted text-xs uppercase tracking-widest mb-2">드러난 믿음</p>
-          <div className="bg-ove-surface rounded-xl p-4 border border-ove-border">
-            <p className="text-ove-primary text-sm font-medium">"{belief}"</p>
+          <div className="bg-ove-surface rounded-xl p-4 border border-ove-border space-y-2">
+            {beliefs.map((b) => (
+              <p key={b} className="text-ove-primary text-sm font-medium">"{b}"</p>
+            ))}
           </div>
         </div>
       )}

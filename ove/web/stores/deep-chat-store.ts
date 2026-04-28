@@ -1,7 +1,8 @@
 'use client';
 
 import { create } from 'zustand';
-import { getSession, updateSession } from '@/lib/db/session-db';
+import { saveSession, withSessionLoad } from '@/lib/db/session-db';
+import { generateDeepChat, generateDeepChatSummary } from '@/lib/ai/gemini';
 import type { LocalSession, DeepChatQA } from '@/lib/models/session';
 
 interface DeepChatState {
@@ -22,18 +23,6 @@ interface DeepChatState {
   reset: () => void;
 }
 
-async function fetchDeepChat(
-  body: Record<string, unknown>,
-): Promise<{ text: string }> {
-  const res = await fetch('/api/gemini', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'deepChat', ...body }),
-  });
-  if (!res.ok) throw new Error('AI 서비스 오류가 발생했습니다.');
-  return res.json() as Promise<{ text: string }>;
-}
-
 const BASE_ROUNDS = 3;
 
 export const useDeepChatStore = create<DeepChatState>((set, get) => ({
@@ -48,44 +37,30 @@ export const useDeepChatStore = create<DeepChatState>((set, get) => ({
   error: null,
 
   load: async (sessionId) => {
-    set({ isLoading: true, error: null });
-    try {
-      const session = await getSession(sessionId);
-      if (!session) throw new Error('세션을 찾을 수 없습니다.');
+    await withSessionLoad<DeepChatState>(sessionId, set, async (session, set) => {
+      const belief = session.beliefSelection?.selectedChoices?.join(' 그리고 ') ?? '';
+      const interpretation = session.beliefSelection?.interpretation ?? '';
 
       if (session.deepChat && session.deepChat.length > 0) {
-        const completedRounds = session.deepChat.length;
         if (session.deepChatSummary) {
           set({ session, qa: session.deepChat, summary: session.deepChatSummary, round: 'summary', isLoading: false });
           return;
         }
-        const nextRound = completedRounds + 1;
-        const belief = session.beliefSelection?.selectedChoice ?? '';
-        const interpretation = session.beliefSelection?.interpretation ?? '';
-        const { text } = await fetchDeepChat({
-          belief,
-          interpretation,
-          actionItems: session.actionItems,
-          previousQA: session.deepChat,
-          round: nextRound,
+        const nextRound = session.deepChat.length + 1;
+        const text = await generateDeepChat({
+          belief, interpretation, actionItems: session.actionItems,
+          previousQA: session.deepChat, round: nextRound,
         });
         set({ session, qa: session.deepChat, round: nextRound, currentQuestion: text, isLoading: false });
         return;
       }
 
-      const belief = session.beliefSelection?.selectedChoice ?? '';
-      const interpretation = session.beliefSelection?.interpretation ?? '';
-      const { text } = await fetchDeepChat({
-        belief,
-        interpretation,
-        actionItems: session.actionItems,
-        previousQA: [],
-        round: 1,
+      const text = await generateDeepChat({
+        belief, interpretation, actionItems: session.actionItems,
+        previousQA: [], round: 1,
       });
       set({ session, qa: [], round: 1, currentQuestion: text, isLoading: false });
-    } catch (err) {
-      set({ error: (err as Error).message, isLoading: false });
-    }
+    }, '연결이 잠시 끊겼어요.');
   },
 
   submitAnswer: async (sessionId, answerText) => {
@@ -97,25 +72,21 @@ export const useDeepChatStore = create<DeepChatState>((set, get) => ({
 
     set({ isLoading: true, pendingAnswer: answerText, error: null });
     try {
-      const belief = session.beliefSelection?.selectedChoice ?? '';
+      const belief = session.beliefSelection?.selectedChoices?.join(' 그리고 ') ?? '';
       const interpretation = session.beliefSelection?.interpretation ?? '';
 
       if ((round as number) >= BASE_ROUNDS) {
-        // BASE_ROUNDS 이상이면 계속/마무리 선택 제공
         const updated: LocalSession = { ...session, deepChat: updatedQA };
-        await updateSession(updated);
+        await saveSession(updated);
         set({ session: updated, qa: updatedQA, showContinueChoice: true, isLoading: false, pendingAnswer: null });
       } else {
         const nextRound = (round as number) + 1;
-        const { text: nextQuestion } = await fetchDeepChat({
-          belief,
-          interpretation,
-          actionItems: session.actionItems,
-          previousQA: updatedQA,
-          round: nextRound,
+        const nextQuestion = await generateDeepChat({
+          belief, interpretation, actionItems: session.actionItems,
+          previousQA: updatedQA, round: nextRound,
         });
         const updated: LocalSession = { ...session, deepChat: updatedQA };
-        await updateSession(updated);
+        await saveSession(updated);
         set({ session: updated, qa: updatedQA, round: nextRound, currentQuestion: nextQuestion, isLoading: false, pendingAnswer: null });
       }
     } catch (err) {
@@ -130,14 +101,11 @@ export const useDeepChatStore = create<DeepChatState>((set, get) => ({
     set({ showContinueChoice: false, isLoading: true, error: null });
     try {
       const nextRound = qa.length + 1;
-      const belief = session.beliefSelection?.selectedChoice ?? '';
+      const belief = session.beliefSelection?.selectedChoices?.join(' 그리고 ') ?? '';
       const interpretation = session.beliefSelection?.interpretation ?? '';
-      const { text } = await fetchDeepChat({
-        belief,
-        interpretation,
-        actionItems: session.actionItems,
-        previousQA: qa,
-        round: nextRound,
+      const text = await generateDeepChat({
+        belief, interpretation, actionItems: session.actionItems,
+        previousQA: qa, round: nextRound,
       });
       set({ round: nextRound, currentQuestion: text, isLoading: false });
     } catch (err) {
@@ -151,17 +119,13 @@ export const useDeepChatStore = create<DeepChatState>((set, get) => ({
 
     set({ showContinueChoice: false, isLoading: true, error: null });
     try {
-      const belief = session.beliefSelection?.selectedChoice ?? '';
+      const belief = session.beliefSelection?.selectedChoices?.join(' 그리고 ') ?? '';
       const interpretation = session.beliefSelection?.interpretation ?? '';
-      const { text: summary } = await fetchDeepChat({
-        belief,
-        interpretation,
-        actionItems: session.actionItems,
-        previousQA: qa,
-        round: 'summary',
+      const summary = await generateDeepChatSummary({
+        belief, interpretation, actionItems: session.actionItems, previousQA: qa,
       });
       const updated: LocalSession = { ...session, deepChat: qa, deepChatSummary: summary };
-      await updateSession(updated);
+      await saveSession(updated);
       set({ session: updated, summary, round: 'summary', isLoading: false, pendingAnswer: null });
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false, showContinueChoice: true });

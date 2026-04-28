@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getSession, updateSession } from '@/lib/db/session-db';
+import { saveSession, withSessionLoad } from '@/lib/db/session-db';
 import {
   generateRestatement,
   generateFollowUpQuestion,
@@ -41,27 +41,18 @@ export const useRestatementStore = create<RestatementState>((set, get) => ({
   readyForEmpathy: false,
   error: null,
 
-  // 최초 로드: restatement 생성 후 paraphrase 확인 대기
   load: async (sessionId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const session = await getSession(sessionId);
-      if (!session) throw new Error('세션을 찾을 수 없습니다.');
-
+    await withSessionLoad<RestatementState>(sessionId, set, async (session, set) => {
       let current = session;
       if (!current.restatement) {
         const restatement = await generateRestatement(current.transcript);
         current = { ...current, restatement };
-        await updateSession(current);
+        await saveSession(current);
       }
-
       set({ session: current, isLoading: false, awaitingConfirmation: true });
-    } catch {
-      set({ isLoading: false, error: '분석 중 오류가 발생했습니다.' });
-    }
+    }, '분석하다가 멈췄어요.');
   },
 
-  // "맞아" 선택 시: follow-up 질문 생성 후 followup 화면으로
   confirmParaphrase: async (sessionId: string) => {
     const { session } = get();
     if (!session) return;
@@ -70,11 +61,10 @@ export const useRestatementStore = create<RestatementState>((set, get) => ({
       await resolveFollowUp(session, set);
       set((s) => ({ ...s, readyForFollowUp: true }));
     } catch {
-      set({ isLoading: false, error: '처리 중 오류가 발생했습니다.' });
+      set({ isLoading: false, error: '잠시 막혔어요.' });
     }
   },
 
-  // "아니야" 후 보정 텍스트 제출: paraphrase 재생성
   correctParaphrase: async (sessionId: string, correction: string) => {
     const { session } = get();
     if (!session) return;
@@ -83,26 +73,20 @@ export const useRestatementStore = create<RestatementState>((set, get) => ({
       const combined = `${session.transcript}\n\n추가 내용: ${correction}`;
       const restatement = await generateRestatement(combined);
       const updated = { ...session, restatement };
-      await updateSession(updated);
+      await saveSession(updated);
       set({ session: updated, isLoading: false, awaitingConfirmation: true });
     } catch {
-      set({ isLoading: false, error: '처리 중 오류가 발생했습니다.' });
+      set({ isLoading: false, error: '잠시 막혔어요.' });
     }
   },
 
-  // followup 페이지 마운트 시: 이미 상태가 있으면 스킵, 없으면 재로드
   loadFollowUp: async (sessionId: string) => {
     const { session, followUpQuestion, readyForEmpathy } = get();
     if (session?.id === sessionId && (followUpQuestion !== null || readyForEmpathy)) return;
 
-    set({ isLoading: true, error: null });
-    try {
-      const s = await getSession(sessionId);
-      if (!s) throw new Error('세션을 찾을 수 없습니다.');
-      await resolveFollowUp(s, set);
-    } catch {
-      set({ isLoading: false, error: '오류가 발생했습니다.' });
-    }
+    await withSessionLoad<RestatementState>(sessionId, set, async (session, set) => {
+      await resolveFollowUp(session, set);
+    }, '잠시 문제가 생겼어요.');
   },
 
   submitFollowUp: async (sessionId: string, answer: string) => {
@@ -138,10 +122,10 @@ export const useRestatementStore = create<RestatementState>((set, get) => ({
         restatement: updatedRestatement,
         followUpQA: [...session.followUpQA, newQA],
       };
-      await updateSession(updated);
+      await saveSession(updated);
       await resolveFollowUp(updated, set);
     } catch {
-      set({ isLoading: false, error: '처리 중 오류가 발생했습니다.' });
+      set({ isLoading: false, error: '잠시 막혔어요.' });
     }
   },
 
@@ -167,7 +151,6 @@ async function resolveFollowUp(
   const steQAs = session.followUpQA.filter((qa) => (qa.phase ?? 'ste') === 'ste');
   const socraticQAs = session.followUpQA.filter((qa) => qa.phase === 'socratic');
 
-  // Phase 1: STE 빈 요소 채우기
   if (!isComplete(restatement) && steQAs.length < MAX_STE_FOLLOWUPS) {
     const followUpQuestion = await generateFollowUpQuestion({
       transcript: session.transcript,
@@ -177,7 +160,6 @@ async function resolveFollowUp(
     return;
   }
 
-  // Phase 2: Socratic 심화 질문
   if (socraticQAs.length < SOCRATIC_ROUNDS) {
     const round = (socraticQAs.length + 1) as 1 | 2;
     const followUpAnswers = session.followUpQA.map((qa) => qa.answerText);

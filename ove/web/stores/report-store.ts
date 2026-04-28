@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getSession, updateSession } from '@/lib/db/session-db';
+import { saveSession, withSessionLoad } from '@/lib/db/session-db';
 import { generateInterpretation } from '@/lib/ai/gemini';
 import type { LocalSession } from '@/lib/models/session';
 import type { ActionItem } from '@/lib/models/action-item';
@@ -25,11 +25,7 @@ export const useReportStore = create<ReportState>((set) => ({
   error: null,
 
   load: async (sessionId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const session = await getSession(sessionId);
-      if (!session) throw new Error('세션을 찾을 수 없습니다.');
-
+    await withSessionLoad<ReportState>(sessionId, set, async (session, set) => {
       if (session.beliefSelection?.interpretation) {
         set({
           session,
@@ -40,31 +36,24 @@ export const useReportStore = create<ReportState>((set) => ({
         });
         return;
       }
-
-      const selectedBelief = session.beliefSelection?.selectedChoice ?? '';
+      const bs = session.beliefSelection;
+      const selectedBelief = bs?.selectedChoices?.join(' 그리고 ') ?? '';
       const { interpretation, actions, homework } = await generateInterpretation({
-        sessionId,
+        sessionId: session.id,
         selectedBelief,
         restatement: session.restatement!,
       });
-
       const updated: LocalSession = {
         ...session,
         status: 'completed',
         completedAt: new Date().toISOString(),
-        beliefSelection: {
-          ...(session.beliefSelection!),
-          interpretation,
-        },
+        beliefSelection: { ...(session.beliefSelection!), interpretation },
         actionItems: actions,
         homework: homework ?? undefined,
       };
-      await updateSession(updated);
-
+      await saveSession(updated);
       set({ session: updated, interpretation, actionItems: actions, homework, isLoading: false });
-    } catch {
-      set({ isLoading: false, error: '리포트 생성 중 오류가 발생했습니다.' });
-    }
+    }, '기록을 정리하다 멈췄어요.');
   },
 
   reset: () =>

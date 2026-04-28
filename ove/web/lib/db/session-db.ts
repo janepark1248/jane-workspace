@@ -11,7 +11,6 @@ class OveDatabase extends Dexie {
     this.version(1).stores({
       sessions: 'id, startedAt, status',
     });
-    // version(2): 인덱스 변경 없음 — 비인덱스 필드(beliefHypotheses, deepChat 등) 추가를 위한 버전 증가
     this.version(2).stores({
       sessions: 'id, startedAt, status',
     });
@@ -20,11 +19,7 @@ class OveDatabase extends Dexie {
 
 const db = new OveDatabase();
 
-export async function insertSession(session: LocalSession): Promise<void> {
-  await db.sessions.put(session);
-}
-
-export async function updateSession(session: LocalSession): Promise<void> {
+export async function saveSession(session: LocalSession): Promise<void> {
   await db.sessions.put(session);
 }
 
@@ -38,4 +33,20 @@ export async function getAllSessions(): Promise<LocalSession[]> {
 
 export async function deleteSession(id: string): Promise<void> {
   await db.sessions.delete(id);
+}
+
+export async function withSessionLoad<S extends { isLoading: boolean; error: string | null }>(
+  sessionId: string,
+  set: (partial: Partial<S>) => void,
+  handler: (session: LocalSession, set: (partial: Partial<S>) => void) => Promise<void>,
+  errorMessage: string,
+): Promise<void> {
+  set({ isLoading: true, error: null } as Partial<S>);
+  try {
+    const session = await getSession(sessionId);
+    if (!session) throw new Error('세션을 찾을 수 없습니다.');
+    await handler(session, set);
+  } catch {
+    set({ isLoading: false, error: errorMessage } as Partial<S>);
+  }
 }

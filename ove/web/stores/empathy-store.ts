@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getSession, updateSession } from '@/lib/db/session-db';
+import { saveSession, withSessionLoad } from '@/lib/db/session-db';
 import { generateEmpathy } from '@/lib/ai/gemini';
 import type { LocalSession } from '@/lib/models/session';
 
@@ -19,27 +19,20 @@ export const useEmpathyStore = create<EmpathyState>((set) => ({
   error: null,
 
   load: async (sessionId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const session = await getSession(sessionId);
-      if (!session) throw new Error('세션을 찾을 수 없습니다.');
-
+    await withSessionLoad<EmpathyState>(sessionId, set, async (session, set) => {
       if (session.empathyResponse) {
         set({ session, empathyText: session.empathyResponse, isLoading: false });
         return;
       }
-
       const followUpAnswers = session.followUpQA.map((qa) => qa.answerText);
       const empathyText = await generateEmpathy({
         restatement: session.restatement!,
         followUpAnswers,
       });
       const updated: LocalSession = { ...session, empathyResponse: empathyText };
-      await updateSession(updated);
+      await saveSession(updated);
       set({ session: updated, empathyText, isLoading: false });
-    } catch {
-      set({ isLoading: false, error: '공감 응답 생성 중 오류가 발생했습니다.' });
-    }
+    }, '응답을 만들다 멈췄어요.');
   },
 
   reset: () => set({ session: null, empathyText: '', isLoading: false, error: null }),

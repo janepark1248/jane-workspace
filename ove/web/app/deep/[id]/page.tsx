@@ -70,7 +70,7 @@ export default function DeepChatPage({ params }: { params: Promise<{ id: string 
     );
   }
 
-  const belief = session?.beliefSelection?.selectedChoice;
+  const belief = session?.beliefSelection?.selectedChoices?.join(' 그리고 ');
   const interpretation = session?.beliefSelection?.interpretation;
   const actionItems = session?.actionItems ?? [];
   const homework = session?.homework;

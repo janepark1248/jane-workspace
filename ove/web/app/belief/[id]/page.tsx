@@ -36,7 +36,7 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
     setCustomText(v);
   };
 
-  const canConfirm = isCustomInput ? customInput.trim().length > 0 : selected !== null;
+  const canConfirm = isCustomInput ? customInput.trim().length > 0 : selected.length > 0;
 
   if (isLoading && choices.length === 0) {
     return (
@@ -59,9 +59,9 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <main className="min-h-screen flex flex-col px-6 py-12">
-      <h2 className="text-xl font-light text-ove-primary mb-2">가장 가까운 믿음을 골라보세요</h2>
+      <h2 className="text-xl font-light text-ove-primary mb-2">해당하는 믿음을 모두 골라보세요</h2>
       <p className="text-ove-muted text-sm mb-8">
-        이 대화에서 드러난 나의 믿음이에요.
+        이 대화에서 드러난 나의 믿음이에요. 여러 개 선택할 수 있어요.
       </p>
 
       <div className="space-y-3 mb-4">
@@ -70,7 +70,7 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
             key={choice}
             onClick={() => select(choice)}
             className={`w-full rounded-xl p-4 text-left border transition-colors text-sm leading-relaxed ${
-              selected === choice && !isCustomInput
+              selected.includes(choice) && !isCustomInput
                 ? 'bg-ove-primary text-black border-ove-primary'
                 : 'bg-ove-surface text-ove-primary border-ove-border hover:border-ove-muted'
             }`}
@@ -108,7 +108,11 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
           disabled={!canConfirm || isLoading}
           className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm disabled:opacity-30 hover:opacity-90 transition-opacity"
         >
-          {isLoading ? '잠시만요...' : '이걸로 할게요'}
+          {isLoading
+            ? '잠시만요...'
+            : !isCustomInput && selected.length > 1
+            ? `이걸로 할게요 (${selected.length}개)`
+            : '이걸로 할게요'}
         </button>
       </div>
     </main>

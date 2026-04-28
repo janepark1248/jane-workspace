@@ -38,6 +38,49 @@ import type { ActionItem } from '@/lib/models/action-item';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const MODEL_NAME = 'gemini-2.5-flash-lite';
+const MAX_TEXT_LENGTH = 2000;
+const CRISIS_KEYWORDS = ['자해', '자살', '죽고싶', '목숨을 끊', '극단적 선택', 'suicide', 'self-harm', 'kill myself'];
+
+function detectCrisis(body: Record<string, unknown>): boolean {
+  const userInputTexts: string[] = [
+    body.transcript,
+    body.situation,
+    body.thought,
+    body.emotion,
+    ...(Array.isArray(body.previousQA)
+      ? (body.previousQA as Array<{ answer?: unknown }>)
+          .filter((qa) => typeof qa.answer === 'string')
+          .map((qa) => qa.answer as string)
+      : []),
+  ].filter((f): f is string => typeof f === 'string');
+  return CRISIS_KEYWORDS.some((kw) => userInputTexts.some((f) => f.includes(kw)));
+}
+
+function getValidationError(body: Record<string, unknown>, action: string): string | null {
+  const textFields = [body.transcript, body.situation, body.thought, body.emotion, body.selectedBelief];
+  if (textFields.some((f) => typeof f === 'string' && f.length > MAX_TEXT_LENGTH)) {
+    return '입력이 너무 깁니다.';
+  }
+
+  if (action === 'deepChat') {
+    const { belief, interpretation, previousQA } = body as {
+      belief?: unknown;
+      interpretation?: unknown;
+      previousQA?: unknown;
+    };
+    if (
+      (typeof belief === 'string' && belief.length > MAX_TEXT_LENGTH) ||
+      (typeof interpretation === 'string' && interpretation.length > MAX_TEXT_LENGTH)
+    ) {
+      return '입력이 너무 깁니다.';
+    }
+    if (Array.isArray(previousQA) && previousQA.length > 10) {
+      return '요청이 너무 깁니다.';
+    }
+  }
+
+  return null;
+}
 
 function extractJson(raw: string): string {
   const match = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
@@ -68,46 +111,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action } = body as { action: string };
 
-    const CRISIS_KEYWORDS = ['자해', '자살', '죽고싶', '목숨을 끊', '극단적 선택', 'suicide', 'self-harm', 'kill myself'];
-    const userInputTexts: string[] = [
-      body.transcript,
-      body.situation,
-      body.thought,
-      body.emotion,
-      ...(Array.isArray(body.previousQA)
-        ? (body.previousQA as Array<{ answer?: unknown }>)
-            .filter((qa) => typeof qa.answer === 'string')
-            .map((qa) => qa.answer as string)
-        : []),
-    ].filter((f): f is string => typeof f === 'string');
-    if (CRISIS_KEYWORDS.some((kw) => userInputTexts.some((f) => f.includes(kw)))) {
+    if (detectCrisis(body)) {
       return Response.json({
         crisis: true,
         message: '지금 많이 힘드신 것 같아요. 혼자 감당하기 어려우시다면 자살예방상담전화(1393)에 연락해보세요. 24시간 전화 상담을 받을 수 있어요.',
       });
     }
 
-    const MAX_TEXT_LENGTH = 2000;
-    const textFields = [body.transcript, body.situation, body.thought, body.emotion, body.selectedBelief];
-    if (textFields.some((f) => typeof f === 'string' && f.length > MAX_TEXT_LENGTH)) {
-      return Response.json({ error: '입력이 너무 깁니다.' }, { status: 400 });
-    }
-
-    if (action === 'deepChat') {
-      const { belief, interpretation, previousQA } = body as {
-        belief?: unknown;
-        interpretation?: unknown;
-        previousQA?: unknown;
-      };
-      if (
-        (typeof belief === 'string' && belief.length > MAX_TEXT_LENGTH) ||
-        (typeof interpretation === 'string' && interpretation.length > MAX_TEXT_LENGTH)
-      ) {
-        return Response.json({ error: '입력이 너무 깁니다.' }, { status: 400 });
-      }
-      if (Array.isArray(previousQA) && previousQA.length > 10) {
-        return Response.json({ error: '요청이 너무 깁니다.' }, { status: 400 });
-      }
+    const validationError = getValidationError(body, action);
+    if (validationError !== null) {
+      return Response.json({ error: validationError }, { status: 400 });
     }
 
     switch (action) {

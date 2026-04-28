@@ -1,5 +1,6 @@
 import type { Restatement } from '@/lib/models/restatement';
 import type { ActionItem } from '@/lib/models/action-item';
+import type { DeepChatQA } from '@/lib/models/session';
 import type { Homework } from '@/lib/models/homework';
 import { getMissingElement } from '@/lib/models/restatement';
 
@@ -103,4 +104,37 @@ export async function generateInterpretation(params: {
     thought: params.restatement.thought,
     emotion: params.restatement.emotion,
   });
+}
+
+export async function generateDeepChat(params: {
+  belief: string;
+  interpretation: string;
+  actionItems: ActionItem[];
+  previousQA: DeepChatQA[];
+  round: number;
+}): Promise<string> {
+  const data = await callGemini<{ text: string }>('deepChat', {
+    belief: params.belief,
+    interpretation: params.interpretation,
+    actionItems: params.actionItems,
+    previousQA: params.previousQA,
+    round: params.round,
+  });
+  return data.text;
+}
+
+export async function generateDeepChatSummary(params: {
+  belief: string;
+  interpretation: string;
+  actionItems: ActionItem[];
+  previousQA: DeepChatQA[];
+}): Promise<string> {
+  const data = await callGemini<{ text: string }>('deepChat', {
+    belief: params.belief,
+    interpretation: params.interpretation,
+    actionItems: params.actionItems,
+    previousQA: params.previousQA,
+    round: 'summary',
+  });
+  return data.text;
 }

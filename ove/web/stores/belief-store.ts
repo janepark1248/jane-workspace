@@ -1,12 +1,12 @@
 import { create } from 'zustand';
-import { getSession, updateSession } from '@/lib/db/session-db';
+import { saveSession, withSessionLoad } from '@/lib/db/session-db';
 import { generateBeliefChoices } from '@/lib/ai/gemini';
 import type { LocalSession } from '@/lib/models/session';
 
 interface BeliefState {
   session: LocalSession | null;
   choices: string[];
-  selected: string | null;
+  selected: string[];
   isCustomInput: boolean;
   customText: string;
   isLoading: boolean;
@@ -22,68 +22,60 @@ interface BeliefState {
 export const useBeliefStore = create<BeliefState>((set, get) => ({
   session: null,
   choices: [],
-  selected: null,
+  selected: [],
   isCustomInput: false,
   customText: '',
   isLoading: false,
   error: null,
 
   load: async (sessionId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const session = await getSession(sessionId);
-      if (!session) throw new Error('세션을 찾을 수 없습니다.');
-
-      let choices = session.beliefSelection?.choices ?? [];
-      const preSelected = session.beliefSelection?.selectedChoice ?? null;
+    await withSessionLoad<BeliefState>(sessionId, set, async (session, set) => {
+      const choices = session.beliefSelection?.choices ?? [];
+      const preSelected = session.beliefSelection?.selectedChoices ?? [];
       if (choices.length === 0) {
         const followUpAnswers = session.followUpQA.map((qa) => qa.answerText);
-        choices = await generateBeliefChoices({
+        const newChoices = await generateBeliefChoices({
           restatement: session.restatement!,
           followUpAnswers,
         });
         const updated: LocalSession = {
           ...session,
-          beliefSelection: {
-            choices,
-            selectedChoice: '',
-            isCustomInput: false,
-            interpretation: '',
-          },
+          beliefSelection: { choices: newChoices, selectedChoices: [], isCustomInput: false, interpretation: '' },
         };
-        await updateSession(updated);
-        set({ session: updated, choices, selected: null, isLoading: false });
+        await saveSession(updated);
+        set({ session: updated, choices: newChoices, selected: [], isLoading: false });
       } else {
-        set({ session, choices, selected: preSelected || null, isLoading: false });
+        set({ session, choices, selected: preSelected, isLoading: false });
       }
-    } catch {
-      set({ isLoading: false, error: '신념 선택지 생성 중 오류가 발생했습니다.' });
-    }
+    }, '선택지를 가져오다 멈췄어요.');
   },
 
-  select: (choice: string) => set({ selected: choice, isCustomInput: false }),
+  select: (choice: string) =>
+    set((s) => ({
+      selected: s.selected.includes(choice)
+        ? s.selected.filter((c) => c !== choice)
+        : [...s.selected, choice],
+      isCustomInput: false,
+    })),
 
   setCustomText: (text: string) => set({ customText: text }),
 
   toggleCustomInput: () =>
-    set((s) => ({ isCustomInput: !s.isCustomInput, selected: null })),
+    set((s) => ({ isCustomInput: !s.isCustomInput, selected: [] })),
 
   confirm: async (sessionId: string) => {
     const { session, selected, isCustomInput, customText, choices } = get();
     if (!session) return;
-    const finalChoice = isCustomInput ? customText.trim() : (selected ?? '');
-    if (!finalChoice) return;
+    const finalChoices = isCustomInput
+      ? (customText.trim() ? [customText.trim()] : [])
+      : selected;
+    if (finalChoices.length === 0) return;
 
     const updated: LocalSession = {
       ...session,
-      beliefSelection: {
-        choices,
-        selectedChoice: finalChoice,
-        isCustomInput,
-        interpretation: '',
-      },
+      beliefSelection: { choices, selectedChoices: finalChoices, isCustomInput, interpretation: '' },
     };
-    await updateSession(updated);
+    await saveSession(updated);
     set({ session: updated });
   },
 
@@ -91,7 +83,7 @@ export const useBeliefStore = create<BeliefState>((set, get) => ({
     set({
       session: null,
       choices: [],
-      selected: null,
+      selected: [],
       isCustomInput: false,
       customText: '',
       isLoading: false,
