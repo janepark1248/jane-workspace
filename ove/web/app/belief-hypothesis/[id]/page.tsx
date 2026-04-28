@@ -57,16 +57,13 @@ export default function BeliefHypothesisPage({ params }: { params: Promise<{ id:
             <button
               key={h.belief}
               onClick={() => selectHypothesis(i)}
-              className={`w-full text-left rounded-xl p-5 border transition-all ${
+              className={`w-full text-left rounded-md p-5 border transition-all ${
                 isSelected
                   ? 'bg-ove-primary text-black border-ove-primary'
                   : 'bg-ove-surface text-ove-primary border-ove-border hover:border-ove-muted'
               }`}
             >
               <p className="text-sm leading-relaxed">{h.text}</p>
-              <p className={`text-xs mt-2 ${isSelected ? 'text-black/60' : 'text-ove-muted'}`}>
-                "{h.belief}"
-              </p>
             </button>
           );
         })}
@@ -76,13 +73,13 @@ export default function BeliefHypothesisPage({ params }: { params: Promise<{ id:
         <button
           onClick={handleConfirm}
           disabled={selectedIndex === null || isLoading}
-          className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm disabled:opacity-30 hover:opacity-90 transition-opacity"
+          className="w-full bg-ove-primary text-black py-4 rounded-md font-medium text-sm disabled:opacity-30 hover:brightness-110 transition-all"
         >
           {isLoading ? '잠시만요...' : selected ? `"${selected.belief}" 이게 맞는 것 같아요` : '선택해주세요'}
         </button>
         <button
           onClick={handleDeny}
-          className="w-full border border-ove-border text-ove-muted py-4 rounded-xl font-medium text-sm hover:border-ove-muted transition-colors"
+          className="w-full border border-ove-border text-ove-muted py-4 rounded-md font-medium text-sm hover:border-ove-muted transition-colors"
         >
           다른 것 같아요
         </button>

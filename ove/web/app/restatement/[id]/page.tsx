@@ -77,14 +77,14 @@ export default function RestatementPage({ params }: { params: Promise<{ id: stri
           <div className="flex gap-3">
             <button
               onClick={() => setShowCorrection(true)}
-              className="flex-1 py-3.5 rounded-xl border border-ove-border text-ove-muted text-sm font-medium hover:border-ove-muted transition-colors"
+              className="flex-1 py-3.5 rounded-md border border-ove-border text-ove-muted text-sm font-medium hover:border-ove-muted transition-colors"
             >
               아니에요
             </button>
             <button
               onClick={() => confirmParaphrase(id)}
               disabled={isLoading}
-              className="flex-1 py-3.5 rounded-xl bg-ove-primary text-black text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-30"
+              className="flex-1 py-3.5 rounded-md bg-ove-primary text-black text-sm font-medium hover:brightness-110 transition-all disabled:opacity-30"
             >
               맞아요
             </button>
@@ -101,7 +101,7 @@ export default function RestatementPage({ params }: { params: Promise<{ id: stri
             <button
               onClick={handleCorrect}
               disabled={!correctionText.trim() || isLoading}
-              className="w-full py-3.5 rounded-xl bg-ove-primary text-black text-sm font-medium disabled:opacity-30 hover:opacity-90 transition-opacity"
+              className="w-full py-3.5 rounded-md bg-ove-primary text-black text-sm font-medium disabled:opacity-30 hover:brightness-110 transition-all"
             >
               {isLoading ? '다시 듣고 있어요...' : '다시 들려줄게요'}
             </button>

@@ -50,12 +50,17 @@ lib/prompts/{route}-prompt.ts  ← AI 프롬프트 (AI 연동 시)
 
 ## 색상 팔레트 (globals.css)
 
+Warm Red 다크모드 + 유사색(±30°) 하모니 체계.
+
 ```
---color-ove-bg:      #0a0a0a   배경
---color-ove-surface: #1a1a1a   카드
---color-ove-primary: #e8e8e8   텍스트 & 버튼
---color-ove-muted:   #888888   보조 텍스트
---color-ove-border:  #2a2a2a   테두리
+--color-ove-bg:          #100f0f   배경
+--color-ove-surface:     #1e1b1a   카드
+--color-ove-primary:     #e9e7e7   텍스트 & 버튼
+--color-ove-muted:       #947e7a   보조 텍스트
+--color-ove-border:      #2f2928   테두리
+--color-ove-accent:      #e67965   강조 (Warm Red, 9°)
+--color-ove-accent-warm: #e2af50   유사색 H+30° (39°, 황금)
+--color-ove-accent-cool: #e25083   유사색 H-30° (339°, 로즈)
 ```
 
 ---

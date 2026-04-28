@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #e8e8e8;
+  --background: #100f0f;
+  --foreground: #e9e7e7;
 }
 
 @theme inline {
@@ -11,17 +11,34 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-ove-bg: #0a0a0a;
-  --color-ove-surface: #1a1a1a;
-  --color-ove-primary: #e8e8e8;
-  --color-ove-muted: #888888;
-  --color-ove-border: #2a2a2a;
+  --color-ove-bg: #100f0f;
+  --color-ove-surface: #1e1b1a;
+  --color-ove-primary: #e9e7e7;
+  --color-ove-muted: #947e7a;
+  --color-ove-border: #2f2928;
+  --color-ove-accent: #e67965;
+  --color-ove-accent-warm: #e2af50;
+  --color-ove-accent-cool: #e25083;
+
+  /* Typography — Perfect Fourth (1.333), base 13px */
+  --text-h1: 31px;
+  --text-h1--line-height: 1.2;
+  --text-h1--letter-spacing: -0.010em;
+  --text-h2: 23px;
+  --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.010em;
+  --text-body: 13px;
+  --text-body--line-height: 1.5;
+  --text-caption: 10px;
+  --text-caption--line-height: 1.5;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 @keyframes ove-wave {
@@ -43,4 +60,8 @@ body {
 @keyframes ove-fade-in-up {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-card-in {
+  animation: ove-fade-in-up 0.45s ease both;
 }

@@ -43,7 +43,7 @@ export default function EmpathyPage({ params }: { params: Promise<{ id: string }
 
       <button
         onClick={() => router.push(`/belief-hypothesis/${id}`)}
-        className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
+        className="w-full bg-ove-primary text-black py-4 rounded-md font-medium text-sm hover:brightness-110 transition-all"
       >
         계속하기
       </button>

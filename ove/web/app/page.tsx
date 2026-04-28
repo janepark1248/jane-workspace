@@ -52,10 +52,10 @@ export default function HomePage() {
               <div key={session.id} className="relative group">
                 <button
                   onClick={() => router.push(`/report/${session.id}`)}
-                  className="w-full bg-ove-surface rounded-xl p-4 text-left border border-ove-border hover:border-ove-muted transition-colors"
+                  className="w-full bg-ove-surface rounded-md p-4 text-left border border-ove-border hover:border-ove-muted hover:-translate-y-[3px] transition-all duration-200"
                 >
-                  <p className="text-ove-primary text-sm truncate pr-6">{session.transcript}</p>
-                  <p className="text-ove-muted text-xs mt-1">
+                  <p className="text-ove-primary text-lg truncate pr-6">{session.transcript}</p>
+                  <p className="text-ove-muted text-sm mt-1">
                     {new Date(session.startedAt).toLocaleDateString('ko-KR', {
                       month: 'long',
                       day: 'numeric',
@@ -84,7 +84,7 @@ export default function HomePage() {
 
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm mt-8 hover:opacity-90 transition-opacity"
+        className="w-full bg-ove-primary text-black py-4 rounded-md font-medium text-sm mt-8 hover:brightness-110 transition-all"
       >
         지금 이야기하기
       </button>
@@ -99,13 +99,13 @@ export default function HomePage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmDeleteId(null)}
-                  className="flex-1 py-2.5 rounded-xl text-sm text-ove-muted border border-ove-border hover:border-ove-muted transition-colors"
+                  className="flex-1 py-2.5 rounded-md text-sm text-ove-muted border border-ove-border hover:border-ove-muted transition-colors"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="flex-1 py-2.5 rounded-xl text-sm bg-red-900/40 text-red-400 border border-red-900/60 hover:bg-red-900/60 transition-colors"
+                  className="flex-1 py-2.5 rounded-md text-sm bg-red-900/40 text-red-400 border border-red-900/60 hover:bg-red-900/60 transition-colors"
                 >
                   삭제
                 </button>
@@ -141,7 +141,7 @@ export default function HomePage() {
                 <button
                   onClick={handleSubmit}
                   disabled={text.trim().length < MIN_LENGTH || isSubmitting}
-                  className="bg-ove-primary text-black px-6 py-2.5 rounded-xl font-medium text-sm disabled:opacity-30 hover:opacity-90 transition-opacity"
+                  className="bg-ove-primary text-black px-6 py-2.5 rounded-md font-medium text-sm disabled:opacity-30 hover:brightness-110 transition-all"
                 >
                   {isSubmitting ? '잠시만요...' : '시작하기'}
                 </button>

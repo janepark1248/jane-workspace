@@ -31,7 +31,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
   if (isLoading && !session) {
     return (
       <main className="min-h-screen flex items-center justify-center">
-        <WaveLoading message="천천히 정리하고 있어요" />
+        <WaveLoading message="당신의 속마음을 관찰한 기록을 작성중이에요" />
       </main>
     );
   }
@@ -54,7 +54,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       <h2 className="text-xl font-light text-ove-primary mb-8">오늘의 기록</h2>
 
       {session?.transcript && (
-        <div className="mb-6">
+        <div className="mb-6 animate-card-in" style={{ animationDelay: '0ms' }}>
           <p className="text-ove-muted text-xs uppercase tracking-widest mb-2">내가 한 말</p>
           <div className="bg-ove-surface rounded-xl p-4 border border-ove-border">
             <p className="text-ove-primary text-sm leading-relaxed whitespace-pre-wrap">{session.transcript}</p>
@@ -63,7 +63,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       )}
 
       {beliefs.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-6 animate-card-in" style={{ animationDelay: '150ms' }}>
           <p className="text-ove-muted text-xs uppercase tracking-widest mb-2">드러난 믿음</p>
           <div className="bg-ove-surface rounded-xl p-4 border border-ove-border space-y-2">
             {beliefs.map((b) => (
@@ -74,7 +74,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       )}
 
       {interpretation && (
-        <div className="mb-6">
+        <div className="mb-6 animate-card-in" style={{ animationDelay: '300ms' }}>
           <p className="text-ove-muted text-xs uppercase tracking-widest mb-2">해석</p>
           <div className="bg-ove-surface rounded-xl p-4 border border-ove-border">
             <p className="text-ove-primary text-sm leading-relaxed">{interpretation}</p>
@@ -83,7 +83,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       )}
 
       {actionItems.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-6 animate-card-in" style={{ animationDelay: '450ms' }}>
           <p className="text-ove-muted text-xs uppercase tracking-widest mb-3">해볼 수 있는 것들</p>
           <div className="space-y-3">
             {actionItems.map((item) => (
@@ -102,7 +102,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       )}
 
       {homework && (
-        <div className="mb-8">
+        <div className="mb-8 animate-card-in" style={{ animationDelay: '600ms' }}>
           <p className="text-ove-muted text-xs uppercase tracking-widest mb-3">오늘 하나만</p>
           <div className="bg-ove-surface rounded-xl p-4 border border-ove-border">
             <div className="flex items-center gap-2 mb-2">
@@ -115,16 +115,16 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
         </div>
       )}
 
-      <div className="mt-auto flex flex-col gap-3">
+      <div className="mt-auto flex flex-col gap-3 animate-card-in" style={{ animationDelay: '750ms' }}>
         <button
           onClick={() => router.push(`/deep/${id}`)}
-          className="w-full border border-ove-border text-ove-primary py-4 rounded-xl font-medium text-sm hover:bg-ove-surface transition-colors"
+          className="w-full border border-ove-border text-ove-primary py-4 rounded-md font-medium text-sm hover:bg-ove-surface transition-colors"
         >
           이에 관해 더 대화하기
         </button>
         <button
           onClick={() => router.push('/')}
-          className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
+          className="w-full bg-ove-primary text-black py-4 rounded-md font-medium text-sm hover:brightness-110 transition-all"
         >
           마무리하기
         </button>

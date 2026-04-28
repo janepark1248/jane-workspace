@@ -209,14 +209,14 @@ export default function DeepChatPage({ params }: { params: Promise<{ id: string 
           <button
             onClick={() => continueTalking()}
             disabled={isLoading}
-            className="w-full border border-ove-border text-ove-primary py-3.5 rounded-xl text-sm font-medium hover:border-ove-muted transition-colors disabled:opacity-30"
+            className="w-full border border-ove-border text-ove-primary py-3.5 rounded-md text-sm font-medium hover:border-ove-muted transition-colors disabled:opacity-30"
           >
             {isLoading ? '잠시만요...' : '계속 탐색할게요'}
           </button>
           <button
             onClick={() => finishChat()}
             disabled={isLoading}
-            className="w-full bg-ove-primary text-black py-3.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-30"
+            className="w-full bg-ove-primary text-black py-3.5 rounded-md text-sm font-medium hover:brightness-110 transition-all disabled:opacity-30"
           >
             {isLoading ? '잠시만요...' : '여기서 마무리할게요'}
           </button>
@@ -237,7 +237,7 @@ export default function DeepChatPage({ params }: { params: Promise<{ id: string 
             <button
               onClick={handleSubmit}
               disabled={!inputText.trim() || isLoading}
-              className="bg-ove-primary text-black px-5 py-3 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-30"
+              className="bg-ove-primary text-black px-5 py-3 rounded-md text-sm font-medium hover:brightness-110 transition-all disabled:opacity-30"
             >
               →
             </button>
@@ -248,7 +248,7 @@ export default function DeepChatPage({ params }: { params: Promise<{ id: string 
         <div className="px-6 py-4 border-t border-ove-border">
           <button
             onClick={() => router.push('/')}
-            className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
+            className="w-full bg-ove-primary text-black py-4 rounded-md font-medium text-sm hover:brightness-110 transition-all"
           >
             마무리하기
           </button>

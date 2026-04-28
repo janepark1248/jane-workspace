@@ -69,7 +69,7 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
           <button
             key={choice}
             onClick={() => select(choice)}
-            className={`w-full rounded-xl p-4 text-left border transition-colors text-sm leading-relaxed ${
+            className={`w-full rounded-md p-4 text-left border transition-colors text-sm leading-relaxed ${
               selected.includes(choice) && !isCustomInput
                 ? 'bg-ove-primary text-black border-ove-primary'
                 : 'bg-ove-surface text-ove-primary border-ove-border hover:border-ove-muted'
@@ -82,7 +82,7 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
 
       <button
         onClick={toggleCustomInput}
-        className={`w-full rounded-xl p-4 text-left border text-sm transition-colors mb-6 ${
+        className={`w-full rounded-md p-4 text-left border text-sm transition-colors mb-6 ${
           isCustomInput
             ? 'border-ove-muted text-ove-muted bg-ove-surface'
             : 'border-ove-border text-ove-muted hover:border-ove-muted bg-transparent'
@@ -106,7 +106,7 @@ export default function BeliefPage({ params }: { params: Promise<{ id: string }>
         <button
           onClick={handleConfirm}
           disabled={!canConfirm || isLoading}
-          className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm disabled:opacity-30 hover:opacity-90 transition-opacity"
+          className="w-full bg-ove-primary text-black py-4 rounded-md font-medium text-sm disabled:opacity-30 hover:brightness-110 transition-all"
         >
           {isLoading
             ? '잠시만요...'

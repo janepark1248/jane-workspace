@@ -55,7 +55,7 @@ export default function ChatPage() {
         <button
           onClick={handleSubmit}
           disabled={text.trim().length < MIN_LENGTH || isSubmitting}
-          className="w-full bg-ove-primary text-black py-4 rounded-xl font-medium text-sm disabled:opacity-30 hover:opacity-90 transition-opacity"
+          className="w-full bg-ove-primary text-black py-4 rounded-md font-medium text-sm disabled:opacity-30 hover:brightness-110 transition-all"
         >
           {isSubmitting ? '분석 중...' : '이야기 시작하기'}
         </button>

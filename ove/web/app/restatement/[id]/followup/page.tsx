@@ -82,7 +82,7 @@ export default function FollowUpPage({ params }: { params: Promise<{ id: string 
                 key={choice}
                 onClick={() => handleChoiceSelect(choice)}
                 disabled={isLoading}
-                className="w-full text-left bg-ove-surface border border-ove-border rounded-xl px-4 py-3 text-ove-primary text-sm leading-relaxed hover:border-ove-muted transition-colors disabled:opacity-30"
+                className="w-full text-left bg-ove-surface border border-ove-border rounded-md px-4 py-3 text-ove-primary text-sm leading-relaxed hover:border-ove-muted transition-colors disabled:opacity-30"
               >
                 {choice}
               </button>
@@ -117,7 +117,7 @@ export default function FollowUpPage({ params }: { params: Promise<{ id: string 
             <button
               onClick={handleSubmit}
               disabled={!answerText.trim() || isLoading}
-              className="w-full py-3.5 rounded-xl bg-ove-primary text-black text-sm font-medium disabled:opacity-30 hover:opacity-90 transition-opacity"
+              className="w-full py-3.5 rounded-md bg-ove-primary text-black text-sm font-medium disabled:opacity-30 hover:brightness-110 transition-all"
             >
               {isLoading ? '잠시만요...' : '계속하기'}
             </button>
