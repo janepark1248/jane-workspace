@@ -158,11 +158,13 @@ web/
 │   │   └── page.tsx                   # 신념 선택/커스텀 입력 화면
 │   ├── report/[id]/
 │   │   └── page.tsx                   # 최종 리포트 화면
-│   └── deep/[id]/
-│       └── page.tsx                   # 딥챗 화면 (소크라테틱 3라운드 + 요약)
+│   ├── deep/[id]/
+│   │   └── page.tsx                   # 딥챗 화면 (소크라테틱 3라운드 + 요약)
+│   └── chat/
+│       └── page.tsx                   # (레거시, 미사용)
 ├── lib/
 │   ├── ai/
-│   │   └── gemini.ts                  # Gemini SDK 래퍼 (서버 전용)
+│   │   └── gemini.ts                  # /api/gemini 클라이언트 fetch 래퍼
 │   ├── db/
 │   │   └── session-db.ts              # Dexie(IndexedDB) 인스턴스 & 쿼리
 │   ├── models/                        # TypeScript 타입 정의
@@ -171,15 +173,15 @@ web/
 │   │   ├── belief-selection.ts        # BeliefSelection
 │   │   ├── action-item.ts             # ActionItem
 │   │   └── homework.ts                # Homework (CBT 과제)
-│   ├── prompts/                       # AI 프롬프트 (코드 인라인 금지)
-│   │   ├── restatement-prompt.ts
-│   │   ├── followup-prompt.ts
-│   │   ├── empathy-prompt.ts
-│   │   ├── belief-hypothesis-prompt.ts
-│   │   ├── belief-choices-prompt.ts
-│   │   ├── interpretation-prompt.ts
-│   │   └── deep-prompt.ts             # 딥챗 소크라테틱 프롬프트
-│   └── session-state.ts               # 세션 상태 유틸리티
+│   └── prompts/                       # AI 프롬프트 (코드 인라인 금지)
+│       ├── restatement-prompt.ts
+│       ├── followup-prompt.ts
+│       ├── empathy-prompt.ts
+│       ├── belief-hypothesis-prompt.ts
+│       ├── belief-choices-prompt.ts
+│       ├── interpretation-prompt.ts
+│       ├── deep-prompt.ts             # 딥챗 소크라테틱 프롬프트
+│       └── guard-prompt.ts            # 위기 감지 / 가드 프롬프트
 └── stores/                            # Zustand 전역 상태
     ├── restatement-store.ts           # 재진술 단계 상태
     ├── empathy-store.ts               # 공감 단계 상태
@@ -227,7 +229,7 @@ web/
 ```
 사용자 입력 (홈 page.tsx)
   → restatement-store.ts: callRestatement()
-  → POST /api/gemini  (route.ts → gemini.ts → Gemini API)
+  → lib/ai/gemini.ts (fetch 래퍼) → POST /api/gemini (route.ts → Gemini SDK → Gemini API)
   → 응답 파싱 → session-db.ts: saveSession()
   → /restatement/[id] 이동
 
