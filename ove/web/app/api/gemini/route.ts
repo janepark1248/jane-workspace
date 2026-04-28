@@ -106,6 +106,17 @@ async function generate(systemPrompt: string, userMessage: string): Promise<stri
   return result.response.text().trim();
 }
 
+async function generateJson<T>(systemPrompt: string, userMessage: string): Promise<T> {
+  const model = genAI.getGenerativeModel({
+    model: MODEL_NAME,
+    systemInstruction: systemPrompt,
+    safetySettings: SAFETY_SETTINGS,
+    generationConfig: { responseMimeType: 'application/json' },
+  });
+  const result = await model.generateContent(userMessage);
+  return JSON.parse(result.response.text().trim()) as T;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -126,16 +137,15 @@ export async function POST(request: Request) {
     switch (action) {
       case 'restatement': {
         const { transcript } = body as { transcript: string };
-        const raw = await generate(
+        const parsed = await generateJson<{ situation: string; thought: string; emotion: string; paraphrase: string }>(
           RESTATEMENT_SYSTEM_PROMPT,
           buildRestatementPrompt(transcript),
         );
-        const parsed = JSON.parse(extractJson(raw));
         return Response.json({
-          situation: (parsed.situation as string) ?? '',
-          thought: (parsed.thought as string) ?? '',
-          emotion: (parsed.emotion as string) ?? '',
-          paraphrase: (parsed.paraphrase as string) ?? '',
+          situation: parsed.situation ?? '',
+          thought: parsed.thought ?? '',
+          emotion: parsed.emotion ?? '',
+          paraphrase: parsed.paraphrase ?? '',
         });
       }
 
@@ -163,14 +173,13 @@ export async function POST(request: Request) {
           round: 1 | 2;
         };
         if (round === 1) {
-          const raw = await generate(
+          const parsed = await generateJson<{ question: string; choices: string[] }>(
             SOCRATIC_ROUND1_SYSTEM_PROMPT,
             buildSocraticPrompt({ situation, thought, emotion, followUpAnswers, round }),
           );
-          const parsed = JSON.parse(extractJson(raw));
           return Response.json({
-            question: (parsed.question as string) ?? '',
-            choices: (parsed.choices as string[]) ?? [],
+            question: parsed.question ?? '',
+            choices: parsed.choices ?? [],
           });
         }
         const question = await generate(
@@ -201,11 +210,14 @@ export async function POST(request: Request) {
           emotion: string;
           followUpAnswers: string[];
         };
-        const raw = await generate(
+        const parsed = await generateJson<{
+          hypotheses?: Array<{ hypothesis: string; belief: string }>;
+          hypothesis?: string;
+          belief?: string;
+        }>(
           BELIEF_HYPOTHESIS_SYSTEM_PROMPT,
           buildBeliefHypothesisPrompt({ situation, thought, emotion, followUpAnswers }),
         );
-        const parsed = JSON.parse(extractJson(raw));
         if (parsed.hypotheses && Array.isArray(parsed.hypotheses)) {
           return Response.json({
             hypotheses: (parsed.hypotheses as Array<{ hypothesis: string; belief: string }>).map(
@@ -234,12 +246,11 @@ export async function POST(request: Request) {
           emotion: string;
           followUpAnswers: string[];
         };
-        const raw = await generate(
+        const parsed = await generateJson<{ choices: string[] }>(
           BELIEF_CHOICES_SYSTEM_PROMPT,
           buildBeliefChoicesPrompt({ situation, thought, emotion, followUpAnswers }),
         );
-        const parsed = JSON.parse(extractJson(raw));
-        return Response.json({ choices: (parsed.choices as string[]) ?? [] });
+        return Response.json({ choices: parsed.choices ?? [] });
       }
 
       case 'interpretation': {
@@ -250,12 +261,15 @@ export async function POST(request: Request) {
           thought: string;
           emotion: string;
         };
-        const raw = await generate(
+        const parsed = await generateJson<{
+          interpretation: string;
+          actions: { text: string; type: string }[];
+          homework?: { type: string; description: string };
+        }>(
           INTERPRETATION_SYSTEM_PROMPT,
           buildInterpretationPrompt({ selectedBelief, situation, thought, emotion }),
         );
-        const parsed = JSON.parse(extractJson(raw));
-        const actions = ((parsed.actions as { text: string; type: string }[]) ?? []).map(
+        const actions = (parsed.actions ?? []).map(
           (a) => ({
             id: uuidv4(),
             sessionId,
